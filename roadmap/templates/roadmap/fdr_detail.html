@@ -1,0 +1,217 @@
+{% extends "roadmap/base.html" %}
+
+{% block title %}FDR – {{ fdr.spectacle }}{% endblock %}
+
+{% block content %}
+<div class="toolbar no-print">
+  <a class="btn secondary" href="{% url 'roadmap:list' %}">← Liste</a>
+  <a class="btn secondary" href="/admin/roadmap/fdr/{{ fdr.pk }}/change/">Modifier</a>
+  <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+</div>
+
+<div class="header">
+  <div>
+    <h1>Feuille de route – {{ fdr.spectacle }}</h1>
+    <p class="muted">{{ fdr.compagnie }}</p>
+  </div>
+  {% if fdr.lieu.logo %}
+    <img class="logo" src="{{ fdr.lieu.logo.url }}" alt="Logo {{ fdr.lieu.nom }}">
+  {% endif %}
+</div>
+
+<dl class="meta">
+  <dt>Date{% if fdr.date_fin %}s{% endif %}</dt>
+  <dd>
+    {{ fdr.date|date:"l j F Y" }}{% if fdr.date_fin %} → {{ fdr.date_fin|date:"l j F Y" }}{% endif %}
+  </dd>
+  {% if fdr.heure %}<dt>Heure</dt><dd>{{ fdr.heure }}</dd>{% endif %}
+  <dt>Lieu</dt>
+  <dd>{{ fdr.lieu.nom }}{% if fdr.lieu.adresse %}<br><span class="muted">{{ fdr.lieu.adresse|linebreaksbr }}</span>{% endif %}</dd>
+  {% if fdr.notes %}<dt>Notes</dt><dd class="note">{{ fdr.notes }}</dd>{% endif %}
+</dl>
+
+{# ---------- Déroulement ---------- #}
+{% if fdr.deroulement.all %}
+<section>
+  <h2>Déroulement</h2>
+  <table>
+    <thead><tr><th>Horaire</th><th>Mission</th><th>Personnel</th></tr></thead>
+    <tbody>
+    {% regroup fdr.deroulement.all by date as jours %}
+    {% for jour in jours %}
+      <tr class="day"><td colspan="3">{{ jour.grouper|date:"l j F Y" }}</td></tr>
+      {% for d in jour.list %}
+      <tr>
+        <td>{{ d.heure_debut|time:"H\hi" }}{% if d.heure_fin %} - {{ d.heure_fin|time:"H\hi" }}{% endif %}</td>
+        <td>{{ d.mission }}</td>
+        <td>{{ d.personnel }}</td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{# ---------- Contacts ---------- #}
+{% with lieu_contacts=fdr.lieu.contacts.all cie_contacts=fdr.compagnie.contacts.all presta=fdr.prestataires.all %}
+{% if lieu_contacts or cie_contacts or presta %}
+<section>
+  <h2>Contacts</h2>
+
+  {% if lieu_contacts %}
+  <h3>Lieu d'accueil – {{ fdr.lieu.nom }}</h3>
+  {% include "roadmap/_contacts.html" with contacts=lieu_contacts %}
+  {% endif %}
+
+  {% if cie_contacts %}
+  <h3>Compagnie – {{ fdr.compagnie.nom }}</h3>
+  {% include "roadmap/_contacts.html" with contacts=cie_contacts %}
+  {% endif %}
+
+  {% if presta %}
+  <h3>Prestataires / intervenants</h3>
+  {% include "roadmap/_contacts.html" with contacts=presta %}
+  {% endif %}
+</section>
+{% endif %}
+{% endwith %}
+
+{# ---------- Voyages et transports ---------- #}
+{% if fdr.transports.all %}
+<section>
+  <h2>Voyages et transports</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Qui</th><th>Trajet</th><th>Moyen</th><th>Départ</th><th>Arrivée</th></tr>
+    </thead>
+    <tbody>
+    {% for t in fdr.transports.all %}
+      <tr>
+        <td {% if t.note  %} rowspan="2" {% endif %} >{{ t.date|date:"D j M" }}</td>
+        <td>{{ t.qui }}</td>
+        <td>{{ t.depart }} → {{ t.arrivee }}</td>
+        <td>{{ t.get_moyen_display }}</td>
+        <td>{{ t.heure_depart|time:"H\hi"|default:"" }}</td>
+        <td>{{ t.heure_arrivee|time:"H\hi"|default:"" }}</td>
+      </tr>
+      {% if t.note  %}
+        <tr>
+          <td colspan="5" class="note">{{ t.note }}</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{# ---------- Hébergement ---------- #}
+{% if fdr.hebergements.all %}
+<section>
+  <h2>Hébergement</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Hébergement</th><th>Distance du lieu</th><th>Single</th><th>Double</th><th>Twin</th></tr>
+    </thead>
+    <tbody>
+    {% for h in fdr.hebergements.all %}
+      <tr>
+        <td {% if h.note  %} rowspan="2" {% endif %}>
+          {{ h.hebergement.nom }}
+          {% if h.hebergement.adresse %}<br><span class="muted">{{ h.hebergement.adresse }}</span>{% endif %}
+        </td>
+        <td>{{ h.distance }}</td>
+        <td>{{ h.chambres_single }}</td>
+        <td>{{ h.chambres_double }}</td>
+        <td>{{ h.chambres_twin }}</td>
+      </tr>
+      {% if h.note  %}
+        <tr>
+          <td colspan="5" class="note">{{ h.note }}</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{# ---------- Restauration ---------- #}
+<section>
+  <h2>Restauration</h2>
+  {% if fdr.repas.all %}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th class="empty">&nbsp;</th><th class="empty">&nbsp;</th>
+        <th colspan="3" class="text-center l-border r-border">Cie</th></th>
+        <th colspan="2" class="text-center r-border">Orga</th>
+        <th class="empty">&nbsp;</th>
+      </tr>
+      <tr>
+        <th rowspan="2">Date</th><th rowspan="2">Type</th>
+        <th class="l-border text-center">matin</th>
+        <th class="text_center">midi</th>
+        <th class="text-center r-border">soir</th>
+        <th class="text-center">midi</th>
+        <th class="text-center r-border">soir</th>
+        <th rowspan="2">Régime</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in fdr.repas.all %}
+      <tr>
+        <td>{{ r.date|date:"D j M" }}</td>
+        <td>{{ r.get_type_display }}</td>
+        <td class="text-center l-border">{{ r.cie_matin }}</td>
+        <td class="text-center">{{ r.cie_midi }}</td>
+        <td class="text-center r-border">{{ r.cie_soir }}</td>
+        <td class="text-center">{{ r.orga_midi }}</td>
+        <td class="text-center r-border">{{ r.orga_soir }}</td>
+        <td>{{ r.regime }}</td> 
+      </tr>
+      {% if r.note %}
+        <tr><td colspan="8" class="note">{{ r.note }}</td></tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  {% with resume=fdr.resume_repas %}
+  <h3>Total par jour</h3>
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Matin</th><th>Midi</th><th>Soir</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+    {% for j in resume.jours %}
+      <tr>
+        <td>{{ j.date|date:"l j F" }}</td>
+        <td>{{ j.matin }}</td>
+        <td>{{ j.midi }}</td>
+        <td>{{ j.soir }}</td>
+        <td><strong>{{ j.total }}</strong></td>
+      </tr>
+    {% endfor %}
+      <tr class="day">
+        <td>Total</td>
+        <td>{{ resume.total.matin }}</td>
+        <td>{{ resume.total.midi }}</td>
+        <td>{{ resume.total.soir }}</td>
+        <td><strong>{{ resume.total.total }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  {% endwith %}
+  </div>
+  {% else %}
+    <p>La Cie est autonome sur ses repas.</p>
+  {% endif %}
+</section>
+
+{% endblock %}

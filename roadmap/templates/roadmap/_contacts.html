@@ -1,0 +1,20 @@
+<table>
+  <thead>
+    <tr><th>Nom</th><th>Fonction</th><th>Téléphone</th><th>Mail</th></tr>
+  </thead>
+  <tbody>
+  {% for c in contacts %}
+    <tr>
+      <td>{{ c.prenom }} {{ c.nom }}</td>
+      <td>{{ c.fonction }}</td>
+      <td>{{ c.telephone }}</td>
+      <td>{{ c.email }}</td>
+    </tr>
+    {% if c.notes  %}
+      <tr>
+        <td colspan="4" class="note">{{ c.notes }}</td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table>
