@@ -12,8 +12,25 @@ def petit_nombre(largeur="4em"):
 
 # --- Lieux, compagnies, hébergements (réutilisables) ---
 
-class ContactLieuInline(SortableInlineAdminMixin, admin.StackedInline):
+class ContactForm(forms.ModelForm):
+    class Meta:
+        fields = "__all__"
+        labels = {
+            "telephone": "Tél.",
+            "email": "Mail",
+        }
+        widgets = {
+            "nom": forms.TextInput(attrs={"style": "width: 8em;"}),
+            "prenom": forms.TextInput(attrs={"style": "width: 8em;"}),
+            "fonction": forms.TextInput(attrs={"style": "width: 9em;"}),
+            "telephone": forms.TextInput(attrs={"style": "width: 8.5em;"}),
+            "email": forms.EmailInput(attrs={"style": "width: 13em;"}),
+            "notes": forms.Textarea(attrs={"rows": 1, "style": "width: 12em;"}),
+        }
+
+class ContactLieuInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContactLieu
+    form = ContactForm
     extra = 1
 
 @admin.register(Lieu)
@@ -29,8 +46,9 @@ class LieuAdmin(SortableAdminBase, admin.ModelAdmin):
         return "—"
 
 
-class ContactCompagnieInline(SortableInlineAdminMixin, admin.StackedInline):
+class ContactCompagnieInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContactCompagnie
+    form = ContactForm
     extra = 1
 
 
@@ -46,8 +64,9 @@ class HebergementAdmin(admin.ModelAdmin):
 
 # --- La FDR et ses blocs ---
 
-class PrestataireInline(SortableInlineAdminMixin, admin.StackedInline):
+class PrestataireInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContactPrestataire
+    form = ContactForm
     extra = 0
 
 class TransportForm(forms.ModelForm):
@@ -140,7 +159,7 @@ class DeroulementForm(forms.ModelForm):
             "heure_debut": "Début",
             "heure_fin": "Fin",
             "mission": "Mission",
-            "personel": "Personel",
+            "personel": "Personnel",
         }
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
@@ -156,12 +175,25 @@ class DeroulementInline(admin.TabularInline):
     extra = 1
 
 
+class FDRForm(forms.ModelForm):
+    class Meta:
+        model = FDR
+        fields = "__all__"
+        widgets = {
+            "date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "date_fin": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+        }
+
+
 @admin.register(FDR)
 class FDRAdmin(SortableAdminBase, admin.ModelAdmin):
-    list_display = ["spectacle", "compagnie", "date", "date_fin", "lieu", "voir"]
-    list_filter = ["date", "compagnie", "lieu"]
+    list_display = ["voir", "statut", "type", "spectacle", "compagnie", "date", "date_fin", "lieu"]
+    list_display_links = ["spectacle"]
+    list_filter = ["statut", "type", "date", "compagnie", "lieu"]
     search_fields = ["spectacle", "compagnie__nom", "lieu__nom"]
     date_hierarchy = "date"
+    form = FDRForm
+    save_as = True
     inlines = [
         PrestataireInline, TransportInline, HebergementFDRInline,
         RestaurationInline, DeroulementInline,
@@ -169,6 +201,22 @@ class FDRAdmin(SortableAdminBase, admin.ModelAdmin):
     @admin.display(description="FDR")
     def voir(self, obj):
         return format_html(
-            '<a href="{}" target="_blank" rel="noopener">Voir ↗</a>',
+            '<a href="{}" target="_blank" rel="noopener">↗</a>',
             obj.get_absolute_url(),
         )
+    def get_inline_instances(self, request, obj=None):
+        instances = super().get_inline_instances(request, obj)
+        if obj is not None:  # édition d'une FDR existante
+            for inline in instances:
+                inline.classes = ["collapse"]
+        return instances
+    
+    actions = ["marquer_envoye", "marquer_valide"]
+
+    @admin.action(description="Marquer comme envoyé")
+    def marquer_envoye(self, request, queryset):
+        queryset.update(statut=FDR.Statut.ENVOYE)
+
+    @admin.action(description="Marquer comme validé")
+    def marquer_valide(self, request, queryset):
+        queryset.update(statut=FDR.Statut.VALIDE)

@@ -85,8 +85,24 @@ class Hebergement(models.Model):
 # ---------- La feuille de route ----------
 
 class FDR(models.Model):
+    class Statut(models.TextChoices):
+        BROUILLON = "brouillon", "Brouillon"
+        ENVOYE = "envoye", "Envoyé"
+        VALIDE = "valide", "Validé"
+
+    class Type(models.TextChoices):
+        SPECTACLE = "spectacle", "Spectacle"
+        RESIDENCE = "residence", "Residence"
+        SOIREE = "soiree", "Soirée"
+
     spectacle = models.CharField(max_length=200)
     compagnie = models.ForeignKey(Compagnie, on_delete=models.PROTECT, related_name="fdrs")
+    statut = models.CharField(
+        "Statut", max_length=10, choices=Statut.choices, default=Statut.BROUILLON,
+    )
+    type = models.CharField(
+        "Type", max_length=10, choices=Type.choices, default=Type.SPECTACLE,
+    )
     date = models.DateField("Date (début)")
     date_fin = models.DateField(
         "Date de fin", null=True, blank=True,
@@ -99,6 +115,7 @@ class FDR(models.Model):
     lieu = models.ForeignKey(Lieu, on_delete=models.PROTECT, related_name="fdrs")
     notes = models.TextField(blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
+
 
     class Meta:
         verbose_name = "feuille de route"

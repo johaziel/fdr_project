@@ -2,28 +2,25 @@
 
 {% block content %}
 <h1>Feuilles de route</h1>
-<div class="toolbar">
-  <a class="btn secondary" href="/admin/roadmap/fdr/add/">+ Nouvelle FDR</a>
-  <a class="btn secondary" href="/admin/">Administration</a>
-</div>
 
 <table>
   <thead>
-    <tr><th>Dates</th><th>Spectacle</th><th>Compagnie</th><th>Lieu</th><th></th></tr>
+    <tr><th>Statut</th><th>Type</th><th>Dates</th><th>Spectacle | Compagnie</th><th>Lieu</th><th></th></tr>
   </thead>
   <tbody>
   {% for fdr in fdrs %}
     <tr>
+      <td><span class="badge {{ fdr.statut }}">{{ fdr.get_statut_display }}</span></td>
+      <td><span class="badge {{ fdr.type }}">{{ fdr.get_type_display }}</span></td>
       <td>
         {{ fdr.date|date:"j M Y" }}{% if fdr.date_fin %} → {{ fdr.date_fin|date:"j M Y" }}{% endif %}
       </td>
-      <td><a href="{{ fdr.get_absolute_url }}">{{ fdr.spectacle }}</a></td>
-      <td>{{ fdr.compagnie }}</td>
+      <td><a href="{{ fdr.get_absolute_url }}">{{ fdr.spectacle }}</a> <br/>{{ fdr.compagnie }}</td>
       <td>{{ fdr.lieu }}</td>
       <td><a href="/admin/roadmap/fdr/{{ fdr.pk }}/change/">Modifier</a></td>
     </tr>
   {% empty %}
-    <tr><td colspan="5" class="muted">Aucune feuille de route pour le moment.</td></tr>
+    <tr><td colspan="6" class="muted">Aucune feuille de route pour le moment.</td></tr>
   {% endfor %}
   </tbody>
 </table>

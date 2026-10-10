@@ -1,0 +1,53 @@
+{% with nom=request.resolver_match.url_name %}
+<nav class="navbar navbar-expand-md navbar-dark navbar-fdr d-print-none">
+  <div class="container-xl">
+    <a class="navbar-brand fw-bold" href="{% url 'roadmap:list' %}">FDR</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navFdr" aria-controls="navFdr" aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navFdr">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link {% if nom == 'list' or nom == 'detail' %}active{% endif %}"
+             href="{% url 'roadmap:list' %}">Feuilles de route</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if nom == 'calendrier' %}active{% endif %}"
+             href="{% url 'roadmap:calendrier' %}">Calendrier</a>
+        </li>
+
+        {% if user.is_staff %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">Gestion</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'admin:roadmap_fdr_add' %}">+ Nouvelle FDR</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'admin:roadmap_lieu_changelist' %}">Lieux</a></li>
+            <li><a class="dropdown-item" href="{% url 'admin:roadmap_compagnie_changelist' %}">Compagnies</a></li>
+            <li><a class="dropdown-item" href="{% url 'admin:roadmap_hebergement_changelist' %}">Hébergements</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'admin:index' %}">Administration</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+
+      <div class="d-flex align-items-center gap-2">
+        {% if user.is_authenticated %}
+          <span class="navbar-text">{{ user.get_username }}</span>
+          <form method="post" action="{% url 'admin:logout' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-light btn-sm">Déconnexion</button>
+          </form>
+        {% else %}
+          <a class="btn btn-outline-light btn-sm" href="{% url 'admin:login' %}">Connexion</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+{% endwith %}

@@ -1,0 +1,69 @@
+{% extends "roadmap/base.html" %}
+
+{% block title %}Calendrier des FDR{% endblock %}
+{% block page_class %}wide{% endblock %}
+
+{% block content %}
+<div id="calendrier"></div>
+
+<div class="legend">
+  <span class="brouillon">Brouillon</span>
+  <span class="envoye">Envoyé</span>
+  <span class="valide">Validé</span>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const el = document.getElementById("calendrier");
+  const calendar = new FullCalendar.Calendar(el, {
+    locale: "fr",
+    firstDay: 1,
+    initialView: "dayGridMonth",
+    height: "auto",
+    dayMaxEvents: true,
+    headerToolbar: {
+      left: "prev,next today",
+      center: "title",
+      right: "dayGridMonth,listMonth",
+    },
+    buttonText: {
+      today: "Aujourd'hui",
+      dayGridMonth: "Mois",
+      listMonth: "Liste",
+    },
+    noEventsContent: "Aucune FDR sur cette période",
+    events: "{% url 'roadmap:calendrier_events' %}",
+
+    // Contenu d'un événement (construit en DOM : pas d'injection HTML)
+    eventContent: function (arg) {
+      const p = arg.event.extendedProps;
+      const wrap = document.createElement("div");
+      wrap.style.overflow = "hidden";
+      const titre = document.createElement("div");
+      titre.className = "evt-title";
+      titre.textContent = arg.event.title;
+      wrap.appendChild(titre);
+      if (p.lieu) {
+        const sub = document.createElement("div");
+        sub.className = "evt-sub";
+        sub.textContent = p.lieu;
+        wrap.appendChild(sub);
+      }
+      return { domNodes: [wrap] };
+    },
+
+    // Info-bulle au survol
+    eventDidMount: function (info) {
+      const p = info.event.extendedProps;
+      info.el.title = [info.event.title, p.compagnie, p.lieu, p.heure, p.statut]
+        .filter(Boolean)
+        .join(" – ");
+    },
+  });
+  calendar.render();
+});
+</script>
+{% endblock %}

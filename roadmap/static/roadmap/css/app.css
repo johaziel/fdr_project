@@ -1,0 +1,131 @@
+/* ==========================================================
+   FDR – styles de l'application (chargés après Bootstrap 5)
+   ========================================================== */
+
+:root {
+  --ink: #1d1d1f;
+  --muted: #6b7280;
+  --line: #d9dce1;
+  --accent: #1f4e79;
+  --accent-dark: #163a5a;
+  --bg: #f5f6f8;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-size: .9rem;
+  line-height: 1.4;
+}
+
+a { color: var(--accent); }
+
+/* ---------- Page ---------- */
+.page {
+  max-width: 900px;
+  margin: 24px auto 32px;
+  padding: 24px;
+  background: #fff;
+}
+.page.wide { max-width: 1200px; }
+
+h1 { font-size: 20px; margin: 0 0 4px; color: var(--accent); }
+h2 { font-size: 14px; margin: 12px 0 6px; padding-bottom: 4px; color: var(--accent);
+     border-bottom: 2px solid var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+h3 { font-size: 13px; margin: 10px 0 6px; }
+
+.muted { color: var(--muted); }
+.note { white-space: pre-line; color: var(--muted); font-size: 13px; }
+section { break-inside: avoid; }
+
+/* ---------- Navbar ---------- */
+.navbar-fdr { background: var(--accent); }
+.navbar-fdr .navbar-brand { letter-spacing: .04em; }
+
+/* ---------- Boutons (compatibilité avec les anciens templates) ---------- */
+.btn:not([class*="btn-"]) {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--accent-dark);
+  --bs-btn-hover-border-color: var(--accent-dark);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--accent-dark);
+  --bs-btn-active-border-color: var(--accent-dark);
+  --bs-btn-padding-y: .4rem;
+  --bs-btn-padding-x: .85rem;
+  --bs-btn-font-size: .9rem;
+}
+.btn.secondary {
+  --bs-btn-color: var(--accent);
+  --bs-btn-bg: #fff;
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--accent);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--accent-dark);
+  --bs-btn-active-border-color: var(--accent-dark);
+}
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+
+/* ---------- Tableaux (listes et fiche FDR, hors FullCalendar) ---------- */
+:is(.page > table, .page section table) { width: 100%; margin-bottom: 8px; }
+:is(.page > table, .page section table) th,
+:is(.page > table, .page section table) td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+:is(.page > table, .page section table) th {
+  font-size: 12px; color: var(--muted); font-weight: 600;
+}
+.day { font-weight: 600; background: #eef2f7; }
+.table-wrap { overflow-x: auto; }
+
+/* ---------- Fiche FDR ---------- */
+.meta { display: grid; grid-template-columns: 140px 1fr; gap: 4px 12px; margin: 12px 0; }
+.meta dt { color: var(--muted); font-weight: 400; }
+.meta dd { margin: 0; font-weight: 500; }
+.header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.logo { max-height: 80px; max-width: 200px; object-fit: contain; }
+
+/* ---------- Badges de statut ---------- */
+.badge { display: inline-block; padding: 10px 10px; border-radius: 999px;
+         font-size: 12px; font-weight: 600; }
+.badge.brouillon { background: #eef0f3; color: #4b5563; }
+.badge.envoye { background: #fff3d6; color: #8a5a00; }
+.badge.valide { background: #dcf3e3; color: #1b6b3a; }
+.badge.residence { background: #9adcd6; color: #057366; }
+.badge.spectacle { background: #ecca85; color: #9b6e15; } 
+.badge.soiree { background: #b77eea; color: #9129ec; }
+/* ---------- Calendrier (FullCalendar) ---------- */
+.fc { --fc-border-color: var(--line); --fc-today-bg-color: #fffbe6; font-size: 13px; }
+.fc .fc-toolbar-title { font-size: 22px; color: var(--accent); text-transform: capitalize; }
+.fc .fc-button-primary { background: var(--accent); border-color: var(--accent); }
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active { background: var(--accent-dark); border-color: var(--accent-dark); }
+.fc .fc-button-primary:disabled { background: var(--accent); border-color: var(--accent); opacity: .5; }
+.fc-event { cursor: pointer; }
+.evt-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.evt-sub { font-size: 11px; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.legend span { padding: 2px 10px; border-radius: 4px; }
+.legend .brouillon { background: #eef0f3; border-left: 3px solid #9ca3af; color: #374151; }
+.legend .envoye { background: #fff3d6; border-left: 3px solid #e0a100; color: #7a4e00; }
+.legend .valide { background: #dcf3e3; border-left: 3px solid #2e9e5b; color: #15572f; }
+
+/* ---------- Impression / PDF ---------- */
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: #fff; font-size: 11pt; }
+  .page { max-width: none; margin: 0; padding: 0; }
+  .navbar, .no-print { display: none !important; }
+  h2 { break-after: avoid; }
+  tr { break-inside: avoid; }
+  .fc .fc-button { display: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
