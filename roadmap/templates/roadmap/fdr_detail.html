@@ -31,6 +31,7 @@
   <dd>{{ fdr.lieu.nom }}{% if fdr.lieu.adresse %}<br><span class="muted">{{ fdr.lieu.adresse|linebreaksbr }}</span>{% endif %}</dd>
   {% if fdr.notes %}<dt>Notes</dt><dd class="note">{{ fdr.notes }}</dd>{% endif %}
 </dl>
+{% include "roadmap/_encart_spectacle.html" %}
 
 {# ---------- Déroulement ---------- #}
 {% if fdr.deroulement.all %}
@@ -56,7 +57,7 @@
 {% endif %}
 
 {# ---------- Contacts ---------- #}
-{% with lieu_contacts=fdr.lieu.contacts.all cie_contacts=fdr.compagnie.contacts.all presta=fdr.prestataires.all %}
+{% with lieu_contacts=fdr.lieu.contacts.all cie_contacts=fdr.contacts_compagnie presta=fdr.prestataires.all %}
 {% if lieu_contacts or cie_contacts or presta %}
 <section>
   <h2>Contacts</h2>

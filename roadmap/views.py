@@ -14,7 +14,7 @@ class FDRListView(LoginRequiredMixin, ListView):
     context_object_name = "fdrs"
 
     def get_queryset(self):
-        return FDR.objects.select_related("compagnie", "lieu")
+        return FDR.objects.select_related("compagnie", "lieu", "spectacle")
 
 
 class FDRDetailView(LoginRequiredMixin, DetailView):
@@ -23,7 +23,7 @@ class FDRDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "fdr"
 
     def get_queryset(self):
-        return FDR.objects.select_related("compagnie", "lieu").prefetch_related(
+        return FDR.objects.select_related("compagnie", "lieu", "spectacle").prefetch_related(
             "lieu__contacts",
             "compagnie__contacts",
             "prestataires",
@@ -31,6 +31,8 @@ class FDRDetailView(LoginRequiredMixin, DetailView):
             "hebergements__hebergement",
             "repas",
             "deroulement",
+            "spectacle__contacts",
+            "spectacle__fichiers"
         )
 
 class CalendrierView(TemplateView):  # ajoute LoginRequiredMixin si tes autres vues l'utilisent
@@ -55,7 +57,7 @@ def calendrier_events(request):
         return JsonResponse([], safe=False, status=400)
 
     fdrs = (
-        FDR.objects.select_related("compagnie", "lieu")
+        FDR.objects.select_related("compagnie", "lieu", "spectacle")
         .filter(date__lt=fin)
         .filter(Q(date_fin__gte=debut) | Q(date_fin__isnull=True, date__gte=debut))
     )
@@ -65,7 +67,7 @@ def calendrier_events(request):
         fond, bordure, texte = STATUT_COULEURS.get(fdr.statut, STATUT_COULEURS["brouillon"])
         evenements.append({
             "id": fdr.pk,
-            "title": fdr.spectacle,
+            "title": str(fdr.spectacle),
             "start": fdr.date.isoformat(),
             # FullCalendar attend une fin exclusive : on ajoute un jour
             "end": ((fdr.date_fin or fdr.date) + timedelta(days=1)).isoformat(),

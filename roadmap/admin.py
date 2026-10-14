@@ -4,7 +4,7 @@ from django.utils.html import format_html
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from .models import (
     Compagnie, ContactCompagnie, ContactLieu, ContactPrestataire, Deroulement,
-    FDR, Hebergement, HebergementFDR, Lieu, Repas, Transport,
+    FDR, Hebergement, HebergementFDR, Lieu, Repas, Transport, Spectacle, FichierSpectacle, ContactSpectacle
 )
 from datetime import timedelta
 from django.http import HttpResponseRedirect
@@ -48,6 +48,23 @@ class LieuAdmin(SortableAdminBase, admin.ModelAdmin):
             return format_html('<img src="{}" style="max-height:40px;">', obj.logo.url)
         return "—"
 
+class ContactSpectacleInline(SortableInlineAdminMixin, admin.TabularInline):
+    model = ContactSpectacle
+    form = ContactForm
+    extra = 1
+
+
+class FichierSpectacleInline(admin.TabularInline):
+    model = FichierSpectacle
+    extra = 1
+
+
+@admin.register(Spectacle)
+class SpectacleAdmin(SortableAdminBase, admin.ModelAdmin):
+    list_display = ["nom", "compagnie", "duree"]
+    list_filter = ["compagnie"]
+    search_fields = ["nom", "compagnie__nom"]
+    inlines = [ContactSpectacleInline, FichierSpectacleInline]
 
 class ContactCompagnieInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContactCompagnie
@@ -212,7 +229,8 @@ class FDRAdmin(RetourFrontMixin, SortableAdminBase, admin.ModelAdmin):
     list_display = ["voir", "statut", "type", "spectacle", "compagnie", "date", "date_fin", "lieu"]
     list_display_links = ["spectacle"]
     list_filter = ["statut", "type", "date", "compagnie", "lieu"]
-    search_fields = ["spectacle", "compagnie__nom", "lieu__nom"]
+    search_fields = ["spectacle__nom", "compagnie__nom", "lieu__nom"]
+    list_select_related = ["compagnie", "lieu", "spectacle"]
     date_hierarchy = "date"
     form = FDRForm
     save_as = True
