@@ -1,0 +1,48 @@
+{% with g=fdr.grille_repas %}
+{% if g.jours %}
+<section>
+  <h2>Restauration</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th style="width:80px;">Repas</th><th>Compagnie</th><th>Organisation</th></tr>
+    </thead>
+    <tbody>
+    {% for j in g.jours %}
+      <tr class="day">
+        <td colspan="3">{{ j.date|date:"l j F Y" }} <span class="muted">– {{ j.total }} repas</span></td>
+      </tr>
+      {% if j.matin_cie.repas or j.matin_orga.repas %}
+      <tr><td>Matin</td>
+        {% include "roadmap/_repas_cell.html" with case=j.matin_cie %}
+        {% include "roadmap/_repas_cell.html" with case=j.matin_orga %}
+      </tr>
+      {% endif %}
+      {% if j.midi_cie.repas or j.midi_orga.repas %}
+      <tr><td>Midi</td>
+        {% include "roadmap/_repas_cell.html" with case=j.midi_cie %}
+        {% include "roadmap/_repas_cell.html" with case=j.midi_orga %}
+      </tr>
+      {% endif %}
+      {% if j.soir_cie.repas or j.soir_orga.repas %}
+      <tr><td>Soir</td>
+        {% include "roadmap/_repas_cell.html" with case=j.soir_cie %}
+        {% include "roadmap/_repas_cell.html" with case=j.soir_orga %}
+      </tr>
+      {% endif %}
+    {% endfor %}
+      <tr class="day">
+        <td>Total</td>
+        <td colspan="2">
+          Compagnie : <strong>{{ g.totaux.cie }}</strong>
+          · Organisation : <strong>{{ g.totaux.orga }}</strong>
+          · Matin : {{ g.totaux.matin }} · Midi : {{ g.totaux.midi }} · Soir : {{ g.totaux.soir }}
+          · <strong>Total : {{ g.totaux.total }}</strong>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+{% endwith %}

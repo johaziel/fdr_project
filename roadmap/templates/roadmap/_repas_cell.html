@@ -1,0 +1,9 @@
+<td>
+{% for r in case.repas %}
+  <div{% if not forloop.last %} style="margin-bottom:6px;"{% endif %}>
+    <strong>{{ r.nombre }}</strong> · {{ r.get_type_display }}{% if r.lieu %} – {{ r.lieu }}{% endif %}
+    {% if r.regime %}<br><small class="muted">Régime : {{ r.regime }}</small>{% endif %}
+    {% if r.note %}<br><small class="note">{{ r.note }}</small>{% endif %}
+  </div>
+{% endfor %}
+</td>

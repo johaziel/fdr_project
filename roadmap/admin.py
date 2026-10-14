@@ -4,8 +4,9 @@ from django.utils.html import format_html
 from adminsortable2.admin import SortableAdminBase, SortableInlineAdminMixin
 from .models import (
     Compagnie, ContactCompagnie, ContactLieu, ContactPrestataire, Deroulement,
-    FDR, Hebergement, HebergementFDR, Lieu, Restauration, Transport,
+    FDR, Hebergement, HebergementFDR, Lieu, Repas, Transport,
 )
+from datetime import timedelta
 
 def petit_nombre(largeur="4em"):
     return forms.NumberInput(attrs={"min": 0, "style": f"width: {largeur};"})
@@ -121,34 +122,24 @@ class HebergementFDRInline(admin.TabularInline):
     extra = 1
 
 
-class RestaurationForm(forms.ModelForm):
+class RepasForm(forms.ModelForm):
     class Meta:
-        model = Restauration
+        model = Repas
         fields = "__all__"
-        labels = {
-            "cie_matin": "Cie matin",
-            "cie_midi": "Cie midi",
-            "cie_soir": "Cie soir",
-            "orga_midi": "Orga midi",
-            "orga_soir": "Orga soir",
-            "regime": "Régime",
-        }
+        labels = {"groupe": "Pour", "lieu": "Lieu / resto", "nombre": "Nb", "regime": "Régime"}
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
-            "cie_matin": petit_nombre(),
-            "cie_midi": petit_nombre(),
-            "cie_soir": petit_nombre(),
-            "orga_midi": petit_nombre(),
-            "orga_soir": petit_nombre(),
-            "regime": forms.TextInput(attrs={"style": "width: 10em;"}),
-            "note": forms.Textarea(attrs={"rows": 1, "style": "width: 12em;"}),
+            "lieu": forms.TextInput(attrs={"style": "width: 11em;"}),
+            "nombre": petit_nombre("4em"),
+            "regime": forms.TextInput(attrs={"style": "width: 9em;"}),
+            "note": forms.Textarea(attrs={"rows": 1, "style": "width: 10em;"}),
         }
 
+class RepasInline(admin.TabularInline):
+    model = Repas
+    form = RepasForm
+    extra = 0
 
-class RestaurationInline(admin.TabularInline):
-    model = Restauration
-    form = RestaurationForm
-    extra = 1
 
 class DeroulementForm(forms.ModelForm):
     class Meta:
@@ -196,7 +187,7 @@ class FDRAdmin(SortableAdminBase, admin.ModelAdmin):
     save_as = True
     inlines = [
         PrestataireInline, TransportInline, HebergementFDRInline,
-        RestaurationInline, DeroulementInline,
+        RepasInline, DeroulementInline,
     ]
     @admin.display(description="FDR")
     def voir(self, obj):
@@ -211,7 +202,7 @@ class FDRAdmin(SortableAdminBase, admin.ModelAdmin):
                 inline.classes = ["collapse"]
         return instances
     
-    actions = ["marquer_envoye", "marquer_valide"]
+    actions = ["marquer_envoye", "marquer_valide", "generer_repas"]
 
     @admin.action(description="Marquer comme envoyé")
     def marquer_envoye(self, request, queryset):
@@ -220,3 +211,19 @@ class FDRAdmin(SortableAdminBase, admin.ModelAdmin):
     @admin.action(description="Marquer comme validé")
     def marquer_valide(self, request, queryset):
         queryset.update(statut=FDR.Statut.VALIDE)
+
+    @admin.action(description="Générer la grille de repas (jours de la FDR)")
+    def generer_repas(self, request, queryset):
+        modeles = [("matin", "cie"), ("midi", "cie"), ("midi", "orga"),
+                   ("soir", "cie"), ("soir", "orga")]
+        crees = 0
+        for fdr in queryset:
+            existants = set(fdr.repas.values_list("date", "moment", "groupe"))
+            jour, fin = fdr.date, (fdr.date_fin or fdr.date)
+            while jour <= fin:
+                for moment, groupe in modeles:
+                    if (jour, moment, groupe) not in existants:
+                        Repas.objects.create(fdr=fdr, date=jour, moment=moment, groupe=groupe)
+                        crees += 1
+                jour += timedelta(days=1)
+        self.message_user(request, f"{crees} ligne(s) de repas créée(s) : renseigne les nombres.")

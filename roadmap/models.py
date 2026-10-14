@@ -116,7 +116,6 @@ class FDR(models.Model):
     notes = models.TextField(blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
 
-
     class Meta:
         verbose_name = "feuille de route"
         verbose_name_plural = "feuilles de route"
@@ -133,20 +132,26 @@ class FDR(models.Model):
         return reverse("roadmap:detail", args=[self.pk])
 
     @property
-    def resume_repas(self):
+    def grille_repas(self):
+        moments = ("matin", "midi", "soir")
+        groupes = ("cie", "orga")
+        totaux = {"total": 0, "cie": 0, "orga": 0, "matin": 0, "midi": 0, "soir": 0}
         jours = {}
         for r in self.repas.all():  # utilise le prefetch de la vue
-            j = jours.setdefault(r.date, {"date": r.date, "matin": 0, "midi": 0, "soir": 0})
-            j["matin"] += r.cie_matin
-            j["midi"] += r.cie_midi + r.orga_midi
-            j["soir"] += r.cie_soir + r.orga_soir
+            if r.nombre == 0:       # une ligne à 0 est ignorée à l'affichage
+                continue
+            j = jours.setdefault(r.date, {
+                "date": r.date, "total": 0,
+                **{f"{m}_{g}": {"repas": [], "nombre": 0} for m in moments for g in groupes},
+            })
+            j[f"{r.moment}_{r.groupe}"]["repas"].append(r)
+            j[f"{r.moment}_{r.groupe}"]["nombre"] += r.nombre
+            j["total"] += r.nombre
+            totaux["total"] += r.nombre
+            totaux[r.groupe] += r.nombre
+            totaux[r.moment] += r.nombre
+        return {"jours": [jours[d] for d in sorted(jours)], "totaux": totaux}
 
-        liste = [jours[d] for d in sorted(jours)]
-        for j in liste:
-            j["total"] = j["matin"] + j["midi"] + j["soir"]
-
-        total = {k: sum(j[k] for j in liste) for k in ("matin", "midi", "soir", "total")}
-        return {"jours": liste, "total": total}
 
 class ContactPrestataire(ContactBase):
     """Prestataires et autres intervenants, propres à une FDR."""
@@ -202,33 +207,41 @@ class HebergementFDR(models.Model):
     def __str__(self):
         return f"{self.hebergement} ({self.fdr})"
 
+class Repas(models.Model):
+    class Moment(models.TextChoices):
+        MATIN = "matin", "Matin"
+        MIDI = "midi", "Midi"
+        SOIR = "soir", "Soir"
 
-class Restauration(models.Model):
+    class Groupe(models.TextChoices):
+        CIE = "cie", "Compagnie"
+        ORGA = "orga", "Organisation"
+
     class Type(models.TextChoices):
         SURPLACE = "surplace", "Sur place"
         RESTAURANT = "resto", "Restaurant"
         DEFRAIEMENT = "defr", "Défraiement"
         CANTINE = "cantine", "Cantine"
         HEBERGEMENT = "hebergement", "Hébergement"
+        DECENTR = "decentr", "Décentralisé"
 
     fdr = models.ForeignKey(FDR, on_delete=models.CASCADE, related_name="repas")
     date = models.DateField()
-    type = models.CharField(max_length=15, choices=Type.choices)
-    cie_matin = models.PositiveIntegerField("Cie – matin", default=0)
-    cie_midi = models.PositiveIntegerField("Cie – midi", default=0)
-    cie_soir = models.PositiveIntegerField("Cie – soir", default=0)
-    orga_midi = models.PositiveIntegerField("Orga – midi", default=0)
-    orga_soir = models.PositiveIntegerField("Orga – soir", default=0)
+    moment = models.CharField(max_length=12, choices=Moment.choices)
+    groupe = models.CharField("Pour", max_length=12, choices=Groupe.choices)
+    type = models.CharField(max_length=12, choices=Type.choices, default=Type.RESTAURANT)
+    lieu = models.CharField("Lieu / restaurant", max_length=200, blank=True)
+    nombre = models.PositiveIntegerField("Nombre", default=0)
     regime = models.CharField("Régime alimentaire", max_length=255, blank=True)
     note = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "restauration"
-        verbose_name_plural = "restauration"
-        ordering = ["date"]
+        verbose_name = "repas"
+        verbose_name_plural = "repas"
+        ordering = ["date", "moment", "groupe"]  # matin < midi < soir, cie < orga
 
     def __str__(self):
-        return f"{self.get_type_display()} – {self.date:%d/%m/%Y}"
+        return f"{self.date:%d/%m} {self.get_moment_display()} – {self.get_groupe_display()} ({self.nombre})"
 
 class Deroulement(models.Model):
     fdr = models.ForeignKey(FDR, on_delete=models.CASCADE, related_name="deroulement")
