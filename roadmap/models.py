@@ -2,6 +2,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
+import os
+import uuid
+
+from django.core.validators import FileExtensionValidator
 
 # ---------- Contacts (base commune) ----------
 
@@ -82,6 +86,57 @@ class Hebergement(models.Model):
         return self.nom
 
 
+def chemin_fichier_spectacle(instance, nom):
+    # préfixe aléatoire : les URL des fichiers ne sont pas devinables
+    return f"spectacles/{uuid.uuid4().hex[:12]}_{nom}"
+
+
+class Spectacle(models.Model):
+    nom = models.CharField(max_length=200)
+    compagnie = models.ForeignKey(Compagnie, on_delete=models.PROTECT, related_name="spectacles")
+    duree = models.CharField("Durée", max_length=100, blank=True)
+    lien = models.URLField("Lien", blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["nom"]
+        constraints = [
+            models.UniqueConstraint(fields=["compagnie", "nom"], name="spectacle_unique_par_compagnie"),
+        ]
+
+    def __str__(self):
+        return self.nom
+
+
+class ContactSpectacle(ContactBase):
+    spectacle = models.ForeignKey(Spectacle, on_delete=models.CASCADE, related_name="contacts")
+
+    class Meta(ContactBase.Meta):
+        verbose_name = "contact du spectacle"
+        verbose_name_plural = "contacts du spectacle"
+
+
+class FichierSpectacle(models.Model):
+    spectacle = models.ForeignKey(Spectacle, on_delete=models.CASCADE, related_name="fichiers")
+    titre = models.CharField("Intitulé", max_length=150, blank=True,
+                             help_text="Ex. : Fiche technique, Plan de feu")
+    fichier = models.FileField(
+        upload_to=chemin_fichier_spectacle,
+        validators=[FileExtensionValidator(["pdf", "jpg", "jpeg", "png"])],
+    )
+
+    class Meta:
+        verbose_name = "fichier du spectacle"
+        verbose_name_plural = "fichiers du spectacle"
+        ordering = ["titre"]
+
+    @property
+    def nom_affiche(self):
+        return self.titre or os.path.basename(self.fichier.name)
+
+    def __str__(self):
+        return self.nom_affiche
+
 # ---------- La feuille de route ----------
 
 class FDR(models.Model):
@@ -96,6 +151,9 @@ class FDR(models.Model):
         SOIREE = "soiree", "Soirée"
 
     spectacle = models.CharField(max_length=200)
+    spectacle_ref = models.ForeignKey(
+        "Spectacle", null=True, blank=True, on_delete=models.PROTECT, related_name="fdrs",
+    )
     compagnie = models.ForeignKey(Compagnie, on_delete=models.PROTECT, related_name="fdrs")
     statut = models.CharField(
         "Statut", max_length=10, choices=Statut.choices, default=Statut.BROUILLON,

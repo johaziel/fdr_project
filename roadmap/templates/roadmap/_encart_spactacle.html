@@ -1,0 +1,27 @@
+{% with sp=fdr.spectacle %}
+{% if sp.duree or sp.notes or sp.lien or sp.fichiers.all %}
+<aside class="encart no-print">
+  <h3>Infos spectacle – {{ sp.nom }}</h3>
+  <dl class="meta">
+    {% if sp.duree %}
+      <dt>Durée</dt><dd>{{ sp.duree }}</dd>
+    {% endif %}
+    {% if sp.lien %}
+      <dt>Lien</dt>
+      <dd><a href="{{ sp.lien }}" target="_blank" rel="noopener">{{ sp.lien }}</a></dd>
+    {% endif %}
+    {% if sp.fichiers.all %}
+      <dt>Fichiers</dt>
+      <dd>
+        {% for f in sp.fichiers.all %}
+          <a href="{{ f.fichier.url }}" target="_blank" rel="noopener">{{ f.nom_affiche }}</a>{% if not forloop.last %} · {% endif %}
+        {% endfor %}
+      </dd>
+    {% endif %}
+    {% if sp.notes %}
+      <dt>Notes</dt><dd class="note">{{ sp.notes }}</dd>
+    {% endif %}
+  </dl>
+</aside>
+{% endif %}
+{% endwith %}
