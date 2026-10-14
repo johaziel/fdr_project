@@ -7,6 +7,8 @@ from .models import (
     FDR, Hebergement, HebergementFDR, Lieu, Repas, Transport,
 )
 from datetime import timedelta
+from django.http import HttpResponseRedirect
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 
 def petit_nombre(largeur="4em"):
     return forms.NumberInput(attrs={"min": 0, "style": f"width: {largeur};"})
@@ -175,9 +177,38 @@ class FDRForm(forms.ModelForm):
             "date_fin": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         }
 
+class RetourFrontMixin:
+    """Équivalent du ?destination= de Drupal : après un enregistrement,
+    retourne à l'URL donnée par ?next= (uniquement sur ce site)."""
+
+    def _cible_retour(self, request):
+        cible = request.GET.get("next")
+        if cible and url_has_allowed_host_and_scheme(
+            cible, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            return cible
+        return None
+
+    def _traiter_retour(self, request, response):
+        cible = self._cible_retour(request)
+        if not cible or not isinstance(response, HttpResponseRedirect):
+            return response
+        if "_save" in request.POST:  # bouton « Enregistrer » simple
+            return HttpResponseRedirect(cible)
+        if "_continue" in request.POST:  # « Enregistrer et continuer » : on garde next
+            sep = "&" if "?" in response.url else "?"
+            return HttpResponseRedirect(f"{response.url}{sep}{urlencode({'next': cible})}")
+        return response
+
+    def response_change(self, request, obj):
+        return self._traiter_retour(request, super().response_change(request, obj))
+
+    def response_add(self, request, obj, post_url_continue=None):
+        return self._traiter_retour(request, super().response_add(request, obj, post_url_continue))
+
 
 @admin.register(FDR)
-class FDRAdmin(SortableAdminBase, admin.ModelAdmin):
+class FDRAdmin(RetourFrontMixin, SortableAdminBase, admin.ModelAdmin):
     list_display = ["voir", "statut", "type", "spectacle", "compagnie", "date", "date_fin", "lieu"]
     list_display_links = ["spectacle"]
     list_filter = ["statut", "type", "date", "compagnie", "lieu"]

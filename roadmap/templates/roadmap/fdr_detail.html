@@ -5,7 +5,7 @@
 {% block content %}
 <div class="toolbar no-print">
   <a class="btn secondary" href="{% url 'roadmap:list' %}">← Liste</a>
-  <a class="btn secondary" href="/admin/roadmap/fdr/{{ fdr.pk }}/change/">Modifier</a>
+  <a class="btn secondary" href="/admin/roadmap/fdr/{{ fdr.pk }}/change/?next={{ request.path|urlencode }}">Modifier</a>
   <button class="btn" onclick="window.print()">Imprimer / PDF</button>
   <span class="badge {{ fdr.statut }}">{{ fdr.get_statut_display }}</span>
   <span class="badge {{ fdr.type }}">{{ fdr.get_type_display }}</span>
