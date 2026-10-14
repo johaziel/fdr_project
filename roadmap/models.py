@@ -150,10 +150,7 @@ class FDR(models.Model):
         RESIDENCE = "residence", "Residence"
         SOIREE = "soiree", "Soirée"
 
-    spectacle = models.CharField(max_length=200)
-    spectacle_ref = models.ForeignKey(
-        "Spectacle", null=True, blank=True, on_delete=models.PROTECT, related_name="fdrs",
-    )
+    spectacle = models.ForeignKey("Spectacle", on_delete=models.PROTECT, related_name="fdrs")
     compagnie = models.ForeignKey(Compagnie, on_delete=models.PROTECT, related_name="fdrs")
     statut = models.CharField(
         "Statut", max_length=10, choices=Statut.choices, default=Statut.BROUILLON,
@@ -183,8 +180,17 @@ class FDR(models.Model):
         return f"{self.spectacle} – {self.compagnie} ({self.date:%d/%m/%Y})"
 
     def clean(self):
+        erreurs = {}
         if self.date_fin and self.date and self.date_fin < self.date:
-            raise ValidationError({"date_fin": "La date de fin doit être après la date de début."})
+            erreurs["date_fin"] = "La date de fin doit être après la date de début."
+        if self.spectacle_id and self.compagnie_id and self.spectacle.compagnie_id != self.compagnie_id:
+            erreurs["spectacle"] = "Ce spectacle n'appartient pas à la compagnie choisie."
+        if erreurs:
+            raise ValidationError(erreurs)
+
+    @property
+    def contacts_compagnie(self):
+        return list(self.compagnie.contacts.all()) + list(self.spectacle.contacts.all())
 
     def get_absolute_url(self):
         return reverse("roadmap:detail", args=[self.pk])
