@@ -19,7 +19,7 @@
              href="{% url 'roadmap:calendrier' %}">Calendrier</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if nom == 'spectacle_list' %}active{% endif %}"
+          <a class="nav-link {% if nom == 'spectacle_list' or nom == 'spectacle_detail' %}active{% endif %}"
              href="{% url 'roadmap:spectacle_list' %}">Spectacles</a>
         </li>
 

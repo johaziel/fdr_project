@@ -11,7 +11,8 @@
   {% for spectacle in spectacles %}
     <tr>
 
-      <td><a href="{{ spectacle.get_absolute_url }}">{{ spectacle.nom }}</a> <br/>{{ spectacle.compagnie }}</td>
+      <td><a href="{{ spectacle.get_absolute_url }}">{{ spectacle.nom }}</a> </td>
+      <td>{{ spectacle.compagnie }}</td>
       <td><a href="/admin/roadmap/spectacle/{{ spectacle.pk }}/change/?next={{ request.get_full_path|urlencode }}">Modifier</a></td>
     </tr>
   {% empty %}

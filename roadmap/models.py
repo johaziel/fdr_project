@@ -107,6 +107,8 @@ class Spectacle(models.Model):
     def __str__(self):
         return self.nom
 
+    def get_absolute_url(self):
+        return reverse("roadmap:spectacle_detail", args=[self.pk])
 
 class ContactSpectacle(ContactBase):
     spectacle = models.ForeignKey(Spectacle, on_delete=models.CASCADE, related_name="contacts")
