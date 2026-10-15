@@ -18,6 +18,10 @@
           <a class="nav-link {% if nom == 'calendrier' %}active{% endif %}"
              href="{% url 'roadmap:calendrier' %}">Calendrier</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link {% if nom == 'spectacle_list' %}active{% endif %}"
+             href="{% url 'roadmap:spectacle_list' %}">Spectacles</a>
+        </li>
 
         {% if user.is_staff %}
         <li class="nav-item dropdown">
