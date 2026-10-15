@@ -4,35 +4,60 @@
 
 {% block content %}
 <div class="toolbar no-print">
-  <a class="btn secondary" href="{% url 'roadmap:list_spectacle' %}">← Liste</a>
+  <a class="btn secondary" href="{% url 'roadmap:spectacle_list' %}">← Liste</a>
   <a class="btn secondary" href="/admin/roadmap/spectacle/{{ spectacle.pk }}/change/?next={{ request.path|urlencode }}">Modifier</a>
 </div>
 
-<div class="header">
-  <div>
-    <h1>Spectacle – {{ spectacle.nom }}</h1>
-    <p class="muted">{{ spectacle.compagnie }}</p>
-  </div>
-</div>
+<h1>{{ spectacle.nom }}</h1>
+<p class="muted">{{ spectacle.compagnie }}</p>
 
 <dl class="meta">
-  {% if fdr.notes %}<dt>Notes</dt><dd class="note">{{ fdr.notes }}</dd>{% endif %}
+  {% if spectacle.duree %}<dt>Durée</dt><dd>{{ spectacle.duree }}</dd>{% endif %}
+  {% if spectacle.lien %}
+    <dt>Lien</dt>
+    <dd><a href="{{ spectacle.lien }}" target="_blank" rel="noopener">{{ spectacle.lien }}</a></dd>
+  {% endif %}
+  {% if spectacle.fichiers.all %}
+    <dt>Fichiers</dt>
+    <dd>
+      {% for f in spectacle.fichiers.all %}
+        <a href="{{ f.fichier.url }}" target="_blank" rel="noopener">{{ f.nom_affiche }}</a>{% if not forloop.last %} · {% endif %}
+      {% endfor %}
+    </dd>
+  {% endif %}
+  {% if spectacle.notes %}<dt>Notes</dt><dd class="note">{{ spectacle.notes }}</dd>{% endif %}
 </dl>
 
 {# ---------- Contacts ---------- #}
-{% with spectacle_contacts=spectacle.contacts.all %}
-{% if spectacle_contacts %}
+{% with contacts=spectacle.contacts.all %}
+{% if contacts %}
 <section>
   <h2>Contacts</h2>
-  {% if spectacle_contacts %}
-  <h3>Contaact </h3>
-  {% include "roadmap/_contacts.html" with contacts=spectacle_contacts %}
-  {% endif %}
-
+  {% include "roadmap/_contacts.html" with contacts=contacts %}
 </section>
 {% endif %}
 {% endwith %}
 
-
-
+{# ---------- Feuilles de route de ce spectacle ---------- #}
+{% with fdrs=spectacle.fdrs.all %}
+{% if fdrs %}
+<section>
+  <h2>Feuilles de route</h2>
+  <table>
+    <thead><tr><th>Dates</th><th>Lieu</th><th>Statut</th></tr></thead>
+    <tbody>
+    {% for fdr in fdrs %}
+      <tr>
+        <td>
+          <a href="{{ fdr.get_absolute_url }}">{{ fdr.date|date:"j M Y" }}{% if fdr.date_fin %} → {{ fdr.date_fin|date:"j M Y" }}{% endif %}</a>
+        </td>
+        <td>{{ fdr.lieu }}</td>
+        <td><span class="badge {{ fdr.statut }}">{{ fdr.get_statut_display }}</span></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endwith %}
 {% endblock %}

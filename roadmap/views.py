@@ -41,7 +41,7 @@ class SpectacleListView(LoginRequiredMixin, ListView):
     context_object_name = "spectacles"
 
     def get_queryset(self):
-        return Spectacle.objects.all()
+        return Spectacle.objects.select_related("compagnie")
 
 class SpectacleDetailView(LoginRequiredMixin, DetailView):
     model = Spectacle
@@ -49,7 +49,9 @@ class SpectacleDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "spectacle"
 
     def get_queryset(self):
-        return Spectacle.objects.prefetch_related("contacts", "fichiers")
+        return Spectacle.objects.select_related("compagnie").prefetch_related(
+            "contacts", "fichiers", "fdrs__lieu"
+        )
 
 
 class CalendrierView(TemplateView):  # ajoute LoginRequiredMixin si tes autres vues l'utilisent
