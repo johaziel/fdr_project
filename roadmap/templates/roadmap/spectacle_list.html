@@ -1,0 +1,22 @@
+{% extends "roadmap/base.html" %}
+
+{% block content %}
+<h1>Spectacle</h1>
+
+<table>
+  <thead>
+    <tr><th>Spectacle</th><th>Compagnie</th><th>&nbsp;</th></tr>
+  </thead>
+  <tbody>
+  {% for spectacle in spectacles %}
+    <tr>
+
+      <td><a href="{{ spectacle.get_absolute_url }}">{{ spectacle.nom }}</a> <br/>{{ spectacle.compagnie }}</td>
+      <td><a href="/admin/roadmap/spectacle/{{ spectacle.pk }}/change/?next={{ request.get_full_path|urlencode }}">Modifier</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6" class="muted">Aucun spectacle pour le moment.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

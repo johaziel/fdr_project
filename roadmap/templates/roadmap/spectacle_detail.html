@@ -1,0 +1,149 @@
+{% extends "roadmap/base.html" %}
+
+{% block title %}FDR – {{ fdr.spectacle }}{% endblock %}
+
+{% block content %}
+<div class="toolbar no-print">
+  <a class="btn secondary" href="{% url 'roadmap:list' %}">← Liste</a>
+  <a class="btn secondary" href="/admin/roadmap/fdr/{{ fdr.pk }}/change/?next={{ request.path|urlencode }}">Modifier</a>
+  <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+  <span class="badge {{ fdr.statut }}">{{ fdr.get_statut_display }}</span>
+  <span class="badge {{ fdr.type }}">{{ fdr.get_type_display }}</span>
+</div>
+
+<div class="header">
+  <div>
+    <h1>Feuille de route – {{ fdr.spectacle }}</h1>
+    <p class="muted">{{ fdr.compagnie }}</p>
+  </div>
+  {% if fdr.lieu.logo %}
+    <img class="logo" src="{{ fdr.lieu.logo.url }}" alt="Logo {{ fdr.lieu.nom }}">
+  {% endif %}
+</div>
+
+<dl class="meta">
+  <dt>Date{% if fdr.date_fin %}s{% endif %}</dt>
+  <dd>
+    {{ fdr.date|date:"l j F Y" }}{% if fdr.date_fin %} → {{ fdr.date_fin|date:"l j F Y" }}{% endif %}
+  </dd>
+  {% if fdr.heure %}<dt>Heure</dt><dd>{{ fdr.heure }}</dd>{% endif %}
+  <dt>Lieu</dt>
+  <dd>{{ fdr.lieu.nom }}{% if fdr.lieu.adresse %}<br><span class="muted">{{ fdr.lieu.adresse|linebreaksbr }}</span>{% endif %}</dd>
+  {% if fdr.notes %}<dt>Notes</dt><dd class="note">{{ fdr.notes }}</dd>{% endif %}
+</dl>
+{% include "roadmap/_encart_spectacle.html" %}
+
+{# ---------- Déroulement ---------- #}
+{% if fdr.deroulement.all %}
+<section>
+  <h2>Déroulement</h2>
+  <table>
+    <thead><tr><th>Horaire</th><th>Mission</th><th>Personnel</th></tr></thead>
+    <tbody>
+    {% regroup fdr.deroulement.all by date as jours %}
+    {% for jour in jours %}
+      <tr class="day"><td colspan="3">{{ jour.grouper|date:"l j F Y" }}</td></tr>
+      {% for d in jour.list %}
+      <tr>
+        <td>{{ d.heure_debut|time:"H\hi" }}{% if d.heure_fin %} - {{ d.heure_fin|time:"H\hi" }}{% endif %}</td>
+        <td>{{ d.mission }}</td>
+        <td>{{ d.personnel }}</td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{# ---------- Contacts ---------- #}
+{% with lieu_contacts=fdr.lieu.contacts.all cie_contacts=fdr.contacts_compagnie presta=fdr.prestataires.all %}
+{% if lieu_contacts or cie_contacts or presta %}
+<section>
+  <h2>Contacts</h2>
+
+  {% if lieu_contacts %}
+  <h3>Lieu d'accueil – {{ fdr.lieu.nom }}</h3>
+  {% include "roadmap/_contacts.html" with contacts=lieu_contacts %}
+  {% endif %}
+
+  {% if cie_contacts %}
+  <h3>Compagnie – {{ fdr.compagnie.nom }}</h3>
+  {% include "roadmap/_contacts.html" with contacts=cie_contacts %}
+  {% endif %}
+
+  {% if presta %}
+  <h3>Prestataires / intervenants</h3>
+  {% include "roadmap/_contacts.html" with contacts=presta %}
+  {% endif %}
+</section>
+{% endif %}
+{% endwith %}
+
+{# ---------- Voyages et transports ---------- #}
+{% if fdr.transports.all %}
+<section>
+  <h2>Voyages et transports</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Date</th><th>Qui</th><th>Trajet</th><th>Moyen</th><th>Départ</th><th>Arrivée</th></tr>
+    </thead>
+    <tbody>
+    {% for t in fdr.transports.all %}
+      <tr>
+        <td {% if t.note  %} rowspan="2" {% endif %} >{{ t.date|date:"D j M" }}</td>
+        <td>{{ t.qui }}</td>
+        <td>{{ t.depart }} → {{ t.arrivee }}</td>
+        <td>{{ t.get_moyen_display }}</td>
+        <td>{{ t.heure_depart|time:"H\hi"|default:"" }}</td>
+        <td>{{ t.heure_arrivee|time:"H\hi"|default:"" }}</td>
+      </tr>
+      {% if t.note  %}
+        <tr>
+          <td colspan="5" class="note">{{ t.note }}</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{# ---------- Hébergement ---------- #}
+{% if fdr.hebergements.all %}
+<section>
+  <h2>Hébergement</h2>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Hébergement</th><th>Distance du lieu</th><th>Single</th><th>Double</th><th>Twin</th></tr>
+    </thead>
+    <tbody>
+    {% for h in fdr.hebergements.all %}
+      <tr>
+        <td {% if h.note  %} rowspan="2" {% endif %}>
+          {{ h.hebergement.nom }}
+          {% if h.hebergement.adresse %}<br><span class="muted">{{ h.hebergement.adresse }}</span>{% endif %}
+        </td>
+        <td>{{ h.distance }}</td>
+        <td>{{ h.chambres_single }}</td>
+        <td>{{ h.chambres_double }}</td>
+        <td>{{ h.chambres_twin }}</td>
+      </tr>
+      {% if h.note  %}
+        <tr>
+          <td colspan="5" class="note">{{ h.note }}</td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
+{% include "roadmap/_repas_section.html" %}
+
+{% endblock %}

@@ -1,6 +1,6 @@
 from django.views.generic import DetailView, ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import FDR
+from .models import FDR, Spectacle
 from datetime import date, timedelta
 
 from django.contrib.auth.decorators import login_required
@@ -35,9 +35,25 @@ class FDRDetailView(LoginRequiredMixin, DetailView):
             "spectacle__fichiers"
         )
 
+class SpectacleListView(LoginRequiredMixin, ListView):
+    model = Spectacle
+    template_name = "roadmap/spectacle_list.html"
+    context_object_name = "spectacles"
+
+    def get_queryset(self):
+        return Spectacle.objects.all()
+
+class SpectacleDetailView(LoginRequiredMixin, DetailView):
+    model = Spectacle
+    template_name = "roadmap/spectacle_detail.html"
+    context_object_name = "spectacle"
+
+    def get_queryset(self):
+        return Spectacle.objects.prefetch_related("contacts", "fichiers", "fdr_set")
+
+
 class CalendrierView(TemplateView):  # ajoute LoginRequiredMixin si tes autres vues l'utilisent
     template_name = "roadmap/calendrier.html"
-
 
 STATUT_COULEURS = {
     # statut: (fond, bordure, texte)
@@ -45,7 +61,6 @@ STATUT_COULEURS = {
     "envoye": ("#fff3d6", "#e0a100", "#7a4e00"),
     "valide": ("#dcf3e3", "#2e9e5b", "#15572f"),
 }
-
 
 @login_required
 def calendrier_events(request):
