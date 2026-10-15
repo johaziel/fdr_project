@@ -49,7 +49,7 @@ class SpectacleDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "spectacle"
 
     def get_queryset(self):
-        return Spectacle.objects.prefetch_related("contacts", "fichiers", "fdr_set")
+        return Spectacle.objects.prefetch_related("contacts", "fichiers")
 
 
 class CalendrierView(TemplateView):  # ajoute LoginRequiredMixin si tes autres vues l'utilisent
