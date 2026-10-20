@@ -1,7 +1,11 @@
 {% with g=fdr.grille_repas %}
-{% if g.jours %}
+{% if g.jours or fdr.notes_restauration %}
 <section>
   <h2>Restauration</h2>
+  {% if fdr.notes_restauration %}
+  <p style="white-space: pre-line;"><strong>Notes :</strong> {{ fdr.notes_restauration }}</p>
+  {% endif %}
+  {% if g.jours %}
   <div class="table-wrap">
   <table>
     <thead>
@@ -43,6 +47,7 @@
     </tbody>
   </table>
   </div>
+  {% endif %}
 </section>
 {% endif %}
 {% endwith %}

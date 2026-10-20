@@ -192,6 +192,7 @@ class FDRForm(forms.ModelForm):
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "date_fin": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "notes_restauration": forms.Textarea(attrs={"rows": 3}),
         }
 
 class RetourFrontMixin:

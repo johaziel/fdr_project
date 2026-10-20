@@ -171,6 +171,10 @@ class FDR(models.Model):
     )
     lieu = models.ForeignKey(Lieu, on_delete=models.PROTECT, related_name="fdrs")
     notes = models.TextField(blank=True)
+    notes_restauration = models.TextField(
+        "Notes restauration", blank=True,
+        help_text="Informations générales sur les repas de cette FDR (allergies, horaires, consignes...).",
+    )
     cree_le = models.DateTimeField(auto_now_add=True)
 
     class Meta:
